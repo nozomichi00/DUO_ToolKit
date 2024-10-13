@@ -1,0 +1,27 @@
+2024-10-13 09:50:05,024 - DEBUG - This is a test log message
+2024-10-13 09:50:05,044 - INFO - Starting application
+2024-10-13 09:50:05,105 - INFO - Creating main window
+2024-10-13 09:50:05,107 - DEBUG - Initializing DUO_ToolKit
+2024-10-13 09:50:05,107 - DEBUG - Creating central widget
+2024-10-13 09:50:05,107 - DEBUG - Setting up main layout
+2024-10-13 09:50:05,107 - DEBUG - Creating CustomTabWidget
+2024-10-13 09:50:05,154 - DEBUG - Setting tab widget style
+2024-10-13 09:50:05,154 - DEBUG - Adding tab widget to main layout
+2024-10-13 09:50:05,154 - DEBUG - Adding home tab
+2024-10-13 09:50:05,154 - INFO - Adding home tab
+2024-10-13 09:50:05,154 - INFO - Initializing HomePage
+2024-10-13 09:50:05,154 - INFO - Tool descriptions loaded successfully
+2024-10-13 09:50:05,174 - INFO - Mouse left tool button, resetting intro
+2024-10-13 09:50:05,203 - DEBUG - DUO_ToolKit initialization complete
+2024-10-13 09:50:05,203 - INFO - Showing main window
+2024-10-13 09:50:05,253 - INFO - Entering main event loop
+2024-10-13 09:50:26,215 - INFO - Mouse entered tool button: 工具1
+2024-10-13 09:50:26,293 - INFO - Mouse left tool button, resetting intro
+2024-10-13 09:50:26,322 - INFO - Mouse entered tool button: 工具2
+2024-10-13 09:50:27,286 - INFO - Mouse left tool button, resetting intro
+2024-10-13 09:50:27,325 - INFO - Mouse entered tool button: 工具1
+2024-10-13 09:50:28,745 - INFO - Tool button clicked: 工具1
+2024-10-13 09:50:28,745 - INFO - Opening tool: 工具1
+2024-10-13 09:50:28,758 - INFO - Mouse left tool button, resetting intro
+2024-10-13 09:50:28,764 - INFO - Created new tab for 工具1
+2024-10-13 09:50:32,354 - INFO - Closing tab: 工具1
