@@ -78,6 +78,7 @@ class DUO_ToolKit(QMainWindow):
         self.tab_widget.setStyleSheet("""
             QTabBar::tab {
                 padding: 5px;
+                font-size: 16px;
             }
             QTabBar::tab:selected {
                 font-weight: bold;
@@ -117,28 +118,34 @@ class DUO_ToolKit(QMainWindow):
     def open_tool(self, tool_name):
         logging.info(f"Opening tool: {tool_name}")
         try:
-            module = importlib.import_module(f"src.tools.tool{tool_name[2:]}")
-            tool_class = getattr(module, f"Tool{tool_name[2:]}")
-            tool = tool_class()
-        except ImportError:
-            logging.error(f"Tool {tool_name} not found")
-            return
+            if tool_name == "Log Type Convert":
+                module = importlib.import_module("src.tools.tool1")
+                tool_class = getattr(module, "Tool1")
+            elif tool_name == "工具2":
+                module = importlib.import_module("src.tools.tool2")
+                tool_class = getattr(module, "Tool2")
+            else:
+                logging.error(f"Tool {tool_name} not found")
+                return
 
-        current_tab = self.tab_widget.currentWidget()
-        if isinstance(current_tab, HomePage):
-            new_tab = QWidget()
-            layout = QVBoxLayout()
-            layout.addWidget(tool)
-            new_tab.setLayout(layout)
-            index = self.tab_widget.addTab(new_tab, tool_name)
-            self.tab_widget.setCurrentIndex(index)
-            self.tab_widget.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, self.create_close_button())
-            logging.info(f"Created new tab for {tool_name}")
-        else:
-            current_tab.layout().itemAt(0).widget().setParent(None)
-            current_tab.layout().addWidget(tool)
-            self.tab_widget.setTabText(self.tab_widget.currentIndex(), tool_name)
-            logging.info(f"Replaced current tab content with {tool_name}")
+            tool = tool_class()
+            current_tab = self.tab_widget.currentWidget()
+            if isinstance(current_tab, HomePage):
+                new_tab = QWidget()
+                layout = QVBoxLayout()
+                layout.addWidget(tool)
+                new_tab.setLayout(layout)
+                index = self.tab_widget.addTab(new_tab, tool_name)
+                self.tab_widget.setCurrentIndex(index)
+                self.tab_widget.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, self.create_close_button())
+                logging.info(f"Created new tab for {tool_name}")
+            else:
+                current_tab.layout().itemAt(0).widget().setParent(None)
+                current_tab.layout().addWidget(tool)
+                self.tab_widget.setTabText(self.tab_widget.currentIndex(), tool_name)
+                logging.info(f"Replaced current tab content with {tool_name}")
+        except ImportError as e:
+            logging.error(f"Error importing tool {tool_name}: {e}")
 
     def create_close_button(self):
         close_button = QPushButton("×")

@@ -56,10 +56,12 @@ class HomePage(QWidget):
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_content = QWidget()
         scroll_layout = QVBoxLayout(scroll_content)
+        
+        tool1_btn = self.create_tool_button("Log Type Convert")
+        scroll_layout.addWidget(tool1_btn)
 
-        for i in range(1, 11):
-            tool_btn = self.create_tool_button(f"工具{i}")
-            scroll_layout.addWidget(tool_btn)
+        tool2_btn = self.create_tool_button("工具2")
+        scroll_layout.addWidget(tool2_btn)
 
         scroll_layout.addStretch()
         scroll_content.setLayout(scroll_layout)
