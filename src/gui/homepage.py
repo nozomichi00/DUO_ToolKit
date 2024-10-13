@@ -1,7 +1,7 @@
 import json
 import logging
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QLabel, QScrollArea, QSizePolicy
-from PyQt6.QtGui import QPalette, QColor, QFont
+from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt, QSize
 
 class HomePage(QWidget):
@@ -14,11 +14,11 @@ class HomePage(QWidget):
 
     def load_tool_descriptions(self):
         try:
-            with open('tool_descriptions.json', 'r', encoding='utf-8') as f:
+            with open('data/tool_descriptions.json', 'r', encoding='utf-8') as f:
                 self.tool_descriptions = json.load(f)
             logging.info("Tool descriptions loaded successfully")
         except FileNotFoundError:
-            logging.error("tool_descriptions.json not found. Please ensure the file exists in the same directory as the script.")
+            logging.error("tool_descriptions.json not found. Please ensure the file exists in the data directory.")
             self.tool_descriptions = {}
         except json.JSONDecodeError as e:
             logging.error(f"Error decoding tool_descriptions.json: {e}")
@@ -77,9 +77,9 @@ class HomePage(QWidget):
 
         self.intro_label = QLabel()
         self.intro_label.setWordWrap(True)
-        self.intro_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # 修改这里
+        self.intro_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.intro_label.setTextFormat(Qt.TextFormat.RichText)
-        self.intro_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)  # 添加这行
+        self.intro_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.reset_intro()
 
         right_layout.addWidget(self.intro_label)
