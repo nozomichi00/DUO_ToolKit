@@ -121,9 +121,18 @@ class DUO_ToolKit(QMainWindow):
             if tool_name == "Log Type Convert":
                 module = importlib.import_module("src.tools.tool1")
                 tool_class = getattr(module, "Tool1")
-            elif tool_name == "工具2":
+            elif tool_name == "Log Content Convert":
                 module = importlib.import_module("src.tools.tool2")
                 tool_class = getattr(module, "Tool2")
+            elif tool_name == "New Tool Setup":
+                module = importlib.import_module("src.tools.tool3")
+                tool_class = getattr(module, "Tool3")
+            elif tool_name == "Copy WRS Daily":
+                module = importlib.import_module("src.tools.tool4")
+                tool_class = getattr(module, "Tool4")
+            elif tool_name == "To Be Decided5":
+                module = importlib.import_module("src.tools.tool5")
+                tool_class = getattr(module, "Tool5")
             else:
                 logging.error(f"Tool {tool_name} not found")
                 return

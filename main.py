@@ -4,12 +4,10 @@ import os
 from PyQt6.QtWidgets import QApplication
 from src.gui.custom_widgets import DUO_ToolKit
 
-# 确保日志目录存在
 log_dir = 'logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-# 设置日志
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -18,7 +16,6 @@ logging.basicConfig(
     ]
 )
 
-# 添加这行立即执行的日志测试
 logging.debug("This is a test log message")
 
 if __name__ == "__main__":

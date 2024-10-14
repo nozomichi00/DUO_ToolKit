@@ -44,7 +44,7 @@ class HomePage(QWidget):
         left_widget.setObjectName("leftWidget")
         left_layout = QVBoxLayout()
 
-        title_label = QLabel("Function Bar")
+        title_label = QLabel("Function")
         title_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet("color: #333333;")
@@ -60,8 +60,17 @@ class HomePage(QWidget):
         tool1_btn = self.create_tool_button("Log Type Convert")
         scroll_layout.addWidget(tool1_btn)
 
-        tool2_btn = self.create_tool_button("工具2")
+        tool2_btn = self.create_tool_button("Log Content Convert")
         scroll_layout.addWidget(tool2_btn)
+
+        tool3_btn = self.create_tool_button("New Tool Setup")
+        scroll_layout.addWidget(tool3_btn)
+
+        tool4_btn = self.create_tool_button("Copy WRS Daily")
+        scroll_layout.addWidget(tool4_btn)
+
+        tool5_btn = self.create_tool_button("To Be Decided5")
+        scroll_layout.addWidget(tool5_btn)
 
         scroll_layout.addStretch()
         scroll_content.setLayout(scroll_layout)
@@ -128,7 +137,7 @@ class HomePage(QWidget):
         self.intro_label.setText(intro_text)
 
     def get_tool_intro(self, tool_name):
-        return self.tool_descriptions.get(tool_name, f"<h3 style='text-align:center;'>{tool_name}</h3><p style='text-align:center;'>开发中</p>")
+        return self.tool_descriptions.get(tool_name, f"<h3 style='text-align:center;'>{tool_name}</h3><p style='text-align:center;'>開發中</p>")
 
     def reset_intro(self):
         logging.info("Mouse left tool button, resetting intro")

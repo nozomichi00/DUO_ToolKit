@@ -1,12 +1,6 @@
 {
-    "Log Type Convert": "<h3 style='text-align:center;'>Log Type Convert</h3><p style='text-align:center;'>这是工具1的详细介绍。</p>",
-    "工具2": "<h3 style='text-align:center;'>工具2</h3><p style='text-align:center;'>这是工具2的详细介绍。</p>",
-    "工具3": "<h3 style='text-align:center;'>工具3</h3><p style='text-align:center;'>工具3正在开发中。它将提供一些新的功能。</p>",
-    "工具4": "<h3 style='text-align:center;'>工具4</h3><p style='text-align:center;'>工具4的介绍。这个工具正在规划中。</p>",
-    "工具5": "<h3 style='text-align:center;'>工具5</h3><p style='text-align:center;'>工具5的介绍。敬请期待。</p>",
-    "工具6": "<h3 style='text-align:center;'>工具6</h3><p style='text-align:center;'>工具6的介绍。更多信息即将公布。</p>",
-    "工具7": "<h3 style='text-align:center;'>工具7</h3><p style='text-align:center;'>工具7的介绍。开发进行中。</p>",
-    "工具8": "<h3 style='text-align:center;'>工具8</h3><p style='text-align:center;'>工具8的介绍。功能正在设计中。</p>",
-    "工具9": "<h3 style='text-align:center;'>工具9</h3><p style='text-align:center;'>工具9的介绍。即将推出。</p>",
-    "工具10": "<h3 style='text-align:center;'>工具10</h3><p style='text-align:center;'>工具10的介绍。这将是一个强大的新工具。</p>"
+    "Log Type Convert": "<div style='display: flex; flex-direction: column; justify-content: center; height: 100%;'><h2 style='text-align:center;'>File Conversion Tool Ver.2</h2><p style='text-align:left;'>File Conversion Tool Ver.2 是一款專門設計用來將壓縮檔案轉換為各種字串格式的工具，並允許將這些字串還原為原始的壓縮檔。</p><p style='text-align:left;'>此工具的目的在於讓用戶能夠方便地以文字形式傳輸檔案，如透過電子郵件，隨後能無損地將檔案還原成原本狀態。</p><p style='text-align:left;'>該工具支援多種格式轉換，包括二進制、十進制、十六進制和 Base64。即使在 TSMC PIP 規則的限制下，也能將圖片、影片、Excel 等多種格式的檔案壓縮成 ZIP，並轉換為文字格式。</p><br><h2 style='text-align:center;'>File Conversion Tool Ver.2</h2><p style='text-align:left;'>File Conversion Tool Ver.2 is a specialized tool designed to convert compressed files into various string formats and restore these strings back to their original compressed form.</p><p style='text-align:left;'>The purpose of this tool is to allow users to conveniently transfer files in textual form, such as through email, and subsequently restore them to their original state without any data loss.</p><p style='text-align:left;'>The tool supports multiple format conversions, including binary, decimal, hexadecimal, and Base64. Even under the restrictions of TSMC PIP rules, files of various formats, such as images, videos, and Excel files, can be compressed into a ZIP format and then converted into text.</p></div>",
+    "Log Content Convert": "<h3 style='text-align:center;'>工具2</h3><p style='text-align:left;'>開發中。</p>",
+    "New Tool Setup": "<h3 style='text-align:center;'>工具3</h3><p style='text-align:left;'>開發中。</p>",
+    "Copy WRS Daily": "<h3 style='text-align:center;'>Copy WRS Daily</h3><p style='text-align:left;'>選擇要複製的日期，執行後會將該日期的WRS內容全部複製到指定天數。</p>"
 }

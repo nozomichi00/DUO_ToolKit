@@ -27,7 +27,7 @@ class Tool1(QWidget):
         self.input_path.setPlaceholderText("Select input file (zip/txt)")
         browse_input_button = QPushButton("Browse")
         browse_input_button.clicked.connect(self.select_input_file)
-        layout.addWidget(QLabel("Select input file (zip/txt):"), 0, 0)
+        layout.addWidget(QLabel("Select input file:"), 0, 0)
         layout.addWidget(self.input_path, 0, 1)
         layout.addWidget(browse_input_button, 0, 2)
 
@@ -72,7 +72,6 @@ class Tool1(QWidget):
         layout.addWidget(QLabel("Output file name:"), 7, 0)
         layout.addWidget(self.output_file_name, 7, 1)
 
-        # Create a frame for the buttons
         button_frame = QWidget(self)
         button_layout = QHBoxLayout(button_frame)
         button_layout.setContentsMargins(0, 0, 0, 0)
@@ -105,7 +104,6 @@ class Tool1(QWidget):
         outer_layout.addWidget(scroll_area)
         self.setLayout(outer_layout)
 
-        # Set styles
         self.setStyleSheet("""
             QWidget {
                 background-color: #f0f0f0;
@@ -166,10 +164,8 @@ class Tool1(QWidget):
 
     def convert_file(self):
         logging.info("Starting file conversion")
-        self.result_label.setText("Converting file, please wait...")
-        self.repaint()
 
-        selected_files = self.input_path.text().split(",")
+        selected_files = self.input_path.text().split("\n")
         if len(selected_files) > 1:
             QMessageBox.critical(self, "Error", "Please select only one file for conversion.")
             logging.error("Multiple files selected for conversion")
@@ -180,9 +176,27 @@ class Tool1(QWidget):
             logging.error("No input file selected")
             return
 
+        if not selected_files[0].endswith(('.zip', '.txt')):
+            QMessageBox.critical(self, "Error", "Unsupported file type. Please select a .zip or .txt file.")
+            logging.error("Unsupported file type selected")
+            return
+
         if not self.output_folder.text():
             QMessageBox.critical(self, "Error", "Please select an output folder.")
             logging.error("No output folder selected")
+            return
+
+        if not self.output_file_name.text().strip():
+            QMessageBox.critical(self, "Error", "Output file name cannot be empty.")
+            logging.error("Empty output file name")
+            return
+
+        try:
+            max_line_length = int(self.max_line_length.text())
+            max_file_size_kb = int(self.max_file_size.text())
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Max line length and max file size must be valid integers.")
+            logging.error("Invalid max line length or file size")
             return
 
         try:
@@ -197,8 +211,16 @@ class Tool1(QWidget):
             logging.error(f"Time format error: {e}")
             return
 
+        if not os.path.exists(selected_files[0]):
+            QMessageBox.critical(self, "Error", "The selected file does not exist.")
+            logging.error("Selected file does not exist")
+            return
+
+        self.result_label.setText("Converting file, please wait...")
+        self.repaint()
+
         try:
-            with open(self.input_path.text(), "rb") as f:
+            with open(selected_files[0], "rb") as f:
                 data = f.read()
             logging.info("Read input file successfully")
         except Exception as e:
@@ -269,17 +291,38 @@ class Tool1(QWidget):
 
     def restore_file(self):
         logging.info("Starting file restoration")
-        self.result_label.setText("Restoring file, please wait...")
-        self.repaint()
 
         selected_files = self.input_path.text().split("\n")
+        if not selected_files:
+            QMessageBox.critical(self, "Error", "Please select files for restoration.")
+            logging.error("No files selected for restoration")
+            return
+
         if not all(file.endswith(".txt") for file in selected_files):
-            self.result_label.setText("Please select valid .txt files for restoration.")
+            QMessageBox.critical(self, "Error", "Please select valid .txt files for restoration.")
             logging.error("Invalid file type for restoration")
             return
 
+        if not self.output_folder.text():
+            QMessageBox.critical(self, "Error", "Please select an output folder.")
+            logging.error("No output folder selected")
+            return
+
+        if not self.output_file_name.text().strip():
+            QMessageBox.critical(self, "Error", "Output file name cannot be empty.")
+            logging.error("Empty output file name")
+            return
+
+        self.result_label.setText("Restoring file, please wait...")
+        self.repaint()
+
         combined_data = []
         for file in selected_files:
+            if not os.path.exists(file):
+                QMessageBox.critical(self, "Error", f"The file {file} does not exist.")
+                logging.error(f"File does not exist: {file}")
+                return
+
             try:
                 with open(file, "r") as f:
                     combined_data.extend(f.readlines())
@@ -312,9 +355,14 @@ class Tool1(QWidget):
             return
 
         output_path = os.path.join(self.output_folder.text(), f"{self.output_file_name.text()}.zip")
-        with open(output_path, "wb") as f:
-            f.write(byte_data)
-        logging.info(f"Restored file saved as: {output_path}")
+        try:
+            with open(output_path, "wb") as f:
+                f.write(byte_data)
+            logging.info(f"Restored file saved as: {output_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error writing restored file: {str(e)}")
+            logging.error(f"Error writing restored file: {e}")
+            return
 
         self.result_label.setText(f"Restoration successful, saved as {output_path}")
         logging.info("File restoration completed successfully")
