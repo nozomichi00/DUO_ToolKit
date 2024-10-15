@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
 import json
+import pandas as pd
 
 class Tool4(QWidget):
     def __init__(self, parent=None):
@@ -32,17 +33,17 @@ class Tool4(QWidget):
         layout.setVerticalSpacing(10)
         layout.setHorizontalSpacing(10)
 
-        self.outlook_account_label = QLabel("Outlook Account:", self)
-        self.outlook_account_input = QLineEdit(self)
-        self.outlook_account_input.setPlaceholderText("lucas_lan")
-        layout.addWidget(self.outlook_account_label, 0, 0)
-        layout.addWidget(self.outlook_account_input, 0, 1)
+        self.wrs_account_label = QLabel("WRS Account:", self)
+        self.wrs_account_input = QLineEdit(self)
+        self.wrs_account_input.setPlaceholderText("lucas_lan")
+        layout.addWidget(self.wrs_account_label, 0, 0)
+        layout.addWidget(self.wrs_account_input, 0, 1)
 
-        self.outlook_password_label = QLabel("Outlook Password:", self)
-        self.outlook_password_input = QLineEdit(self)
-        self.outlook_password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        layout.addWidget(self.outlook_password_label, 1, 0)
-        layout.addWidget(self.outlook_password_input, 1, 1)
+        self.wrs_password_label = QLabel("WRS Password:", self)
+        self.wrs_password_input = QLineEdit(self)
+        self.wrs_password_input.setEchoMode(QLineEdit.EchoMode.Password)
+        layout.addWidget(self.wrs_password_label, 1, 0)
+        layout.addWidget(self.wrs_password_input, 1, 1)
 
         self.copy_date_label = QLabel("Select Date to Copy:", self)
         self.copy_date_edit = QDateEdit(self)
@@ -111,7 +112,6 @@ class Tool4(QWidget):
     def execute_copy(self):
         logging.info("Execute copy function called")
         
-        # 前置檢查
         allowed_ips = ["175.98.153.34", "60.251.209.66"]
         try:
             response = requests.get('https://api.ipify.org?format=json', timeout=10)
@@ -127,14 +127,14 @@ class Tool4(QWidget):
             logging.error(f"Unauthorized access attempt from IP: {external_ip}")
             return
 
-        if not self.outlook_account_input.text().strip():
-            QMessageBox.critical(self, "錯誤", "請輸入Outlook帳號。")
-            logging.error("Outlook account not provided")
+        if not self.wrs_account_input.text().strip():
+            QMessageBox.critical(self, "錯誤", "請輸入WRS帳號。")
+            logging.error("WRS account not provided")
             return
 
-        if not self.outlook_password_input.text().strip():
-            QMessageBox.critical(self, "錯誤", "請輸入Outlook密碼。")
-            logging.error("Outlook password not provided")
+        if not self.wrs_password_input.text().strip():
+            QMessageBox.critical(self, "錯誤", "請輸入WRS密碼。")
+            logging.error("WRS password not provided")
             return
 
         copy_date = self.copy_date_edit.date().toString("yyyy/MM/dd")
@@ -144,18 +144,15 @@ class Tool4(QWidget):
             logging.error("Invalid date range: copy date is not earlier than fill date")
             return
 
-        # 執行複製
         try:
             service = Service(executable_path=os.path.join('bin', 'chromedriver.exe'))
             driver = webdriver.Chrome(service=service)
             driver.get("http://setw-eep:7890/#/Login?RefType=logout")
 
-            # 等待頁面加載並輸入帳號和密碼
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "userAccount"))).send_keys(self.outlook_account_input.text())
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "passwords"))).send_keys(self.outlook_password_input.text())
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "userAccount"))).send_keys(self.wrs_account_input.text())
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "passwords"))).send_keys(self.wrs_password_input.text())
             WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".MuiButtonBase-root[type='submit']"))).click()
 
-            # 檢查是否成功登入
             try:
                 WebDriverWait(driver, 5).until(EC.url_contains("http://setw-eep:7890/#/WorkingHours/PersonalWeeklyReview"))
                 logging.info("Login successful")
@@ -165,32 +162,48 @@ class Tool4(QWidget):
                 driver.quit()
                 return
 
-            # 轉移到新增報工頁面
             driver.get("http://setw-eep:7890/#/WorkingHours/AddWH")
-            time.sleep(2)
-
-            # 填寫日期
-            start_date_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, ":re:")))
-            start_date_input.clear()
-            start_date_input.send_keys(copy_date)
-            time.sleep(2)  # 等待系統更新
-
-            end_date_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, ":rg:")))
-            end_date_input.clear()
-            end_date_input.send_keys(fill_date)
-            time.sleep(2)  # 等待系統更新
-
-            # 取得資料
             try:
-                # 等待表格加載完成
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, ":re:")))
+                logging.info("Page loaded successfully")
+            except Exception as e:
+                logging.error(f"Error loading page: {e}")
+                QMessageBox.critical(self, "錯誤", "無法加載新增報工頁面。")
+                driver.quit()
+                return
+
+            try:
+                start_date_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, ":re:")))
+                start_date_input.clear()
+                start_date_input.send_keys(copy_date)
+                time.sleep(2)
+
+                updated_start_date = start_date_input.get_attribute('value')
+                if updated_start_date != copy_date:
+                    raise Exception("Start date not updated correctly")
+
+                end_date_input = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, ":rg:")))
+                end_date_input.clear()
+                end_date_input.send_keys(fill_date)
+                time.sleep(2)
+
+                updated_end_date = end_date_input.get_attribute('value')
+                if updated_end_date != fill_date:
+                    raise Exception("End date not updated correctly")
+
+            except Exception as e:
+                logging.error(f"Error setting dates: {e}")
+                QMessageBox.critical(self, "錯誤", "日期設置失敗。")
+                driver.quit()
+                return
+
+            try:
                 table = WebDriverWait(driver, 20).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, ".MuiTable-root"))
                 )
 
-                # 提取表格行
                 rows = table.find_elements(By.CSS_SELECTOR, "tbody tr")
 
-                # 整理數據
                 data = []
                 for row in rows:
                     cells = row.find_elements(By.CSS_SELECTOR, "td")
@@ -206,10 +219,14 @@ class Tool4(QWidget):
                     }
                     data.append(row_data)
 
-                # 將數據轉換為 JSON 格式
                 json_data = json.dumps(data, ensure_ascii=False, indent=4)
                 logging.info("Data extracted successfully")
                 logging.info(json_data)
+
+                df = pd.DataFrame(data)
+                excel_file_path = os.path.join(os.getcwd(), 'wrs_data.xlsx')
+                df.to_excel(excel_file_path, index=False)
+                logging.info(f"Data exported to Excel file at {excel_file_path}")
 
             except Exception as e:
                 logging.error(f"Error extracting data: {e}")
@@ -223,7 +240,6 @@ class Tool4(QWidget):
             QMessageBox.critical(self, "錯誤", "操作失敗，請檢查帳號密碼是否錯誤。")
             return
         
-        # 完成通知
         QMessageBox.information(self, "Execute Copy", "This function will execute the copy operation.")
 
     def show_about(self):
