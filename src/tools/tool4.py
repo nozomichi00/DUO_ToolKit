@@ -193,11 +193,11 @@ class Tool4(QWidget):
                 time.sleep(2)
 
                 driver.refresh()
+                time.sleep(3)
 
                 with open("modified_page.html", "w", encoding="utf-8") as file:
                     file.write(driver.page_source)
                 logging.info("HTML content saved to modified_page.html")
-                time.sleep(1)
             except Exception as e:
                 logging.error(f"Error setting dates: {e}")
                 QMessageBox.critical(self, "錯誤", f"日期設置失敗。")
@@ -236,11 +236,11 @@ class Tool4(QWidget):
                     time.sleep(2)
 
                     # 點擊Category1選擇器
+                    print(category_parts[0])
                     category1_selector = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[1]/div/div[1]/div/div"))
                     )
                     category1_selector.click()
-                    time.sleep(1)
                     if category_parts[0] == "有CRM":
                         crm_option = WebDriverWait(driver, 10).until(
                             EC.element_to_be_clickable((By.XPATH, "//li[@data-value='1']"))
@@ -258,7 +258,6 @@ class Tool4(QWidget):
                         EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[1]/div/div[2]/div/div"))
                     )
                     category2_selector.click()
-                    time.sleep(1)
                     category2_value_map = {
                         "Case": "3",
                         "Installation": "4",
@@ -291,9 +290,6 @@ class Tool4(QWidget):
                             EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[1]/div/div[3]/div/div"))
                         )
                         category3_selector.click()
-                        time.sleep(1)
-
-                        # 建立清單
                         category3_value_map = {
                             "會議資料": "40",
                             "其它": "41",
@@ -354,63 +350,65 @@ class Tool4(QWidget):
                         )
                         crm_number_input.click()
                         time.sleep(1)
-                        actions = ActionChains(driver)
-                        actions.send_keys(row_data[3])
-                        actions.perform()
+                        crm_number_actions = ActionChains(driver)
+                        crm_number_actions.send_keys(row_data[3])
+                        crm_number_actions.perform()
                         time.sleep(1)
 
                     # 選擇建立日期
                     fill_day = int(fill_date.split('/')[2])
                     fill_date_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[4]/div/div[1]/div/div/div/button")
                     fill_date_button.click()
-                    time.sleep(1)
                     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "MuiCalendarPicker-root")))
                     fill_day_button = driver.find_element(By.XPATH, f"//button[text()='{fill_day}']")
                     fill_day_button.click()
-                    time.sleep(2)
+                    time.sleep(1)
 
                     # 取得起始時間跟結束時間
                     time_range = row_data[5].split()[0]
                     start_time, end_time = time_range.split("~")
                     start_hour, start_minute = map(int, start_time.split(":"))
                     end_hour, end_minute = map(int, end_time.split(":"))
+                    if start_hour == 0:
+                        start_hour = "00"
+                    if start_minute == 0:
+                        start_minute = "00"
+                    if end_hour == 0:
+                        end_hour = "00"
+                    if end_minute == 0:
+                        end_minute = "00"
 
                     # 選擇起始時間
                     start_time_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[5]/div/div[2]/div/div/div/button")
                     start_time_button.click()
-
                     WebDriverWait(driver, 10).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, "MuiClock-clock"))
                     )
                     start_hour_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{start_hour} hours']")))
-                    actions = ActionChains(driver)
-                    actions.move_to_element(start_hour_element).click().perform()
+                    start_hour_actions = ActionChains(driver)
+                    start_hour_actions.move_to_element(start_hour_element).click().perform()
                     time.sleep(1)
                 
                     start_minute_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{start_minute} minutes']")))
-                    actions = ActionChains(driver)
-                    actions.move_to_element(start_minute_element).click().perform()
+                    start_minute_actions = ActionChains(driver)
+                    start_minute_actions.move_to_element(start_minute_element).click().perform()
                     time.sleep(1)
 
                     # 選擇結束時間
                     end_time_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[5]/div/div[4]/div/div/div/button")
                     end_time_button.click()
-
                     WebDriverWait(driver, 10).until(
-                        EC.visibility_of_element_located((By.CLASS_NAME, "MuiClock-clock"))
+                        EC.visibility_of_element_located((By.CLASS_NAME, "MuiClock-wrapper"))
                     )
                     end_hour_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{end_hour} hours']")))
-                    actions = ActionChains(driver)
-                    actions.move_to_element(end_hour_element).click().perform()
+                    end_hour_actions = ActionChains(driver)
+                    end_hour_actions.move_to_element(end_hour_element).click().perform()
                     time.sleep(1)
-                    print(f"選擇了結束時間{end_hour}")
 
-                    # 這裡卡住
                     end_minute_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{end_minute} minutes']")))
-                    actions = ActionChains(driver)
-                    actions.move_to_element(end_minute_element).click().perform()
+                    end_minute_actions = ActionChains(driver)
+                    end_minute_actions.move_to_element(end_minute_element).click().perform()
                     time.sleep(1)
-                    print(f"選擇了結束時間{end_minute}")
 
                     # 填寫標題
                     title_input = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[2]/div[1]/div/div/input")
