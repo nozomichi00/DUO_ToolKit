@@ -3,6 +3,7 @@ import logging
 import os
 from PyQt6.QtWidgets import QApplication
 from src.gui.custom_widgets import DUO_ToolKit
+from src.tools import tool1, tool2, tool3, tool4
 
 log_dir = 'logs'
 if not os.path.exists(log_dir):

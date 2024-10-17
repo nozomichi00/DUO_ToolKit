@@ -9,9 +9,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
+from webdriver_manager.chrome import ChromeDriverManager
 import os
 import time
-import pandas as pd
 from bs4 import BeautifulSoup
 
 class Tool4(QWidget):
@@ -148,9 +148,11 @@ class Tool4(QWidget):
         try:
             # Set window size
             options = Options()
-            options.add_argument("--window-size=1400,900")
+            options.add_argument("--window-size=1600,900")
 
-            service = Service(executable_path=os.path.join('bin', 'chromedriver.exe'))
+            # 使用 WebDriver Manager 自動管理 ChromeDriver
+            service = Service(ChromeDriverManager().install())
+            # service = Service(executable_path=os.path.join('bin', 'chromedriver.exe'))
             driver = webdriver.Chrome(service=service, options=options)
             
             # Step 1: Login
@@ -191,13 +193,6 @@ class Tool4(QWidget):
                 end_day_button = driver.find_element(By.XPATH, f"//button[text()='{copy_day}']")
                 end_day_button.click()
                 time.sleep(2)
-
-                driver.refresh()
-                time.sleep(3)
-
-                with open("modified_page.html", "w", encoding="utf-8") as file:
-                    file.write(driver.page_source)
-                logging.info("HTML content saved to modified_page.html")
             except Exception as e:
                 logging.error(f"Error setting dates: {e}")
                 QMessageBox.critical(self, "錯誤", f"日期設置失敗。")
@@ -206,17 +201,22 @@ class Tool4(QWidget):
 
             # Step 3: Analyze and Create Reports
             try:
-                with open("modified_page.html", "r", encoding="utf-8") as file:
-                    soup = BeautifulSoup(file, "html.parser")
-                    table = soup.find("table", {"class": "MuiTable-root"})
-                    rows = table.find_all("tr")
+                page_source = driver.page_source
+                soup = BeautifulSoup(page_source, "html.parser")
+                table = soup.find("table", {"class": "MuiTable-root"})
+                if not table:
+                    raise ValueError("Table not found on the page")
+                rows = table.find_all("tr")
 
-                    data = []
-                    for row in rows:
-                        cells = row.find_all("td")
-                        if cells:
-                            row_data = [cell.get_text(separator="\n", strip=True) for cell in cells]
-                            data.append(row_data)
+                driver.refresh()
+                time.sleep(3)
+
+                data = []
+                for row in rows:
+                    cells = row.find_all("td")
+                    if cells:
+                        row_data = [cell.get_text(separator="\n", strip=True) for cell in cells]
+                        data.append(row_data)
 
             except Exception as e:
                 logging.error(f"Error analyzing data or creating reports: {e}")
@@ -227,8 +227,16 @@ class Tool4(QWidget):
             # Step 4: Create Reports
             try:
                 for row_data in data:
+                    if row_data[1] == "":
+                        logging.warning(f"Skipping row with empty category: {row_data}")
+                        continue
                     category = row_data[1]
                     category_parts = category.split("\\")
+                    if len(category_parts) < 2:
+                        logging.error(f"Invalid category format: {category}")
+                        QMessageBox.critical(self, "錯誤", f"無效的Category格式: {category}")
+                        driver.quit()
+                        return
 
                     # 點擊新增日報按鈕
                     new_report_button = driver.find_element(By.XPATH, "//*[@id='root']/div/div/main/div[4]/button[1]")
@@ -236,21 +244,25 @@ class Tool4(QWidget):
                     time.sleep(2)
 
                     # 點擊Category1選擇器
-                    print(category_parts[0])
                     category1_selector = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[1]/div/div[1]/div/div"))
                     )
                     category1_selector.click()
                     if category_parts[0] == "有CRM":
                         crm_option = WebDriverWait(driver, 10).until(
-                            EC.element_to_be_clickable((By.XPATH, "//li[@data-value='1']"))
+                            EC.element_to_be_clickable((By.XPATH, "/html/body/div[5]/div[3]/ul/li[1]"))
                         )
                         driver.execute_script("arguments[0].click();", crm_option)
                     elif category_parts[0] == "無CRM":
                         no_crm_option = WebDriverWait(driver, 10).until(
-                            EC.element_to_be_clickable((By.XPATH, "//li[@data-value='2']"))
+                            EC.element_to_be_clickable((By.XPATH, "/html/body/div[5]/div[3]/ul/li[2]"))
                         )
                         driver.execute_script("arguments[0].click();", no_crm_option)
+                    else:
+                        logging.error(f"Invalid category1 part: {category_parts[0]}")
+                        QMessageBox.critical(self, "錯誤", f"無效的Category1選項: {category_parts[0]}")
+                        driver.quit()
+                        return
                     time.sleep(1)
 
                     # 點擊Category2選擇器
@@ -359,6 +371,7 @@ class Tool4(QWidget):
                     fill_day = int(fill_date.split('/')[2])
                     fill_date_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[4]/div/div[1]/div/div/div/button")
                     fill_date_button.click()
+                    time.sleep(3)
                     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "MuiCalendarPicker-root")))
                     fill_day_button = driver.find_element(By.XPATH, f"//button[text()='{fill_day}']")
                     fill_day_button.click()
@@ -369,14 +382,52 @@ class Tool4(QWidget):
                     start_time, end_time = time_range.split("~")
                     start_hour, start_minute = map(int, start_time.split(":"))
                     end_hour, end_minute = map(int, end_time.split(":"))
-                    if start_hour == 0:
-                        start_hour = "00"
-                    if start_minute == 0:
-                        start_minute = "00"
-                    if end_hour == 0:
-                        end_hour = "00"
-                    if end_minute == 0:
-                        end_minute = "00"
+                    start_hour = str(start_hour)
+                    start_minute = str(start_minute)
+                    end_hour = str(end_hour)
+                    end_minute = str(end_minute)
+
+                    hour_elements = {
+                        "0": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[1]",
+                        "1": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[2]",
+                        "2": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[3]",
+                        "3": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[4]",
+                        "4": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[5]",
+                        "5": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[6]",
+                        "6": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[7]",
+                        "7": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[8]",
+                        "8": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[9]",
+                        "9": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[10]",
+                        "10": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[11]",
+                        "11": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[12]",
+                        "12": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[13]",
+                        "13": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[14]",
+                        "14": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[15]",
+                        "15": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[16]",
+                        "16": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[17]",
+                        "17": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[18]",
+                        "18": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[19]",
+                        "19": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[20]",
+                        "20": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[21]",
+                        "21": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[22]",
+                        "22": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[23]",
+                        "23": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[24]"
+                    }
+
+                    minute_elements = {
+                        "5": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[1]",
+                        "10": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[2]",
+                        "15": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[3]",
+                        "20": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[4]",
+                        "25": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[5]",
+                        "30": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[6]",
+                        "35": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[7]",
+                        "40": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[8]",
+                        "45": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[9]",
+                        "50": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[10]",
+                        "55": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[11]",
+                        "0": "/html/body/div[5]/div[2]/div/div/div/div[2]/div/div[4]/span[12]"
+                    }
 
                     # 選擇起始時間
                     start_time_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[5]/div/div[2]/div/div/div/button")
@@ -384,12 +435,16 @@ class Tool4(QWidget):
                     WebDriverWait(driver, 10).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, "MuiClock-clock"))
                     )
-                    start_hour_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{start_hour} hours']")))
+                    time.sleep(1)
+
+                    start_hour_xpath = hour_elements.get(str(start_hour), None)
+                    start_hour_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, start_hour_xpath)))
                     start_hour_actions = ActionChains(driver)
                     start_hour_actions.move_to_element(start_hour_element).click().perform()
                     time.sleep(1)
-                
-                    start_minute_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{start_minute} minutes']")))
+
+                    start_minute_xpath = minute_elements.get(str(start_minute), None)
+                    start_minute_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, start_minute_xpath)))
                     start_minute_actions = ActionChains(driver)
                     start_minute_actions.move_to_element(start_minute_element).click().perform()
                     time.sleep(1)
@@ -400,12 +455,16 @@ class Tool4(QWidget):
                     WebDriverWait(driver, 10).until(
                         EC.visibility_of_element_located((By.CLASS_NAME, "MuiClock-wrapper"))
                     )
-                    end_hour_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{end_hour} hours']")))
+                    time.sleep(1)
+
+                    end_hour_xpath = hour_elements.get(str(end_hour), None)
+                    end_hour_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, end_hour_xpath)))
                     end_hour_actions = ActionChains(driver)
                     end_hour_actions.move_to_element(end_hour_element).click().perform()
                     time.sleep(1)
 
-                    end_minute_element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, f"//span[@aria-label='{end_minute} minutes']")))
+                    end_minute_xpath = minute_elements.get(str(end_minute), None)
+                    end_minute_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, end_minute_xpath)))
                     end_minute_actions = ActionChains(driver)
                     end_minute_actions.move_to_element(end_minute_element).click().perform()
                     time.sleep(1)
@@ -414,7 +473,7 @@ class Tool4(QWidget):
                     title_input = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[2]/div[1]/div/div/input")
                     title_input.send_keys(row_data[6])
                     time.sleep(1)
-
+                    
                     # 填寫內容
                     content_textarea = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[2]/div[2]/div/div/textarea[1]")
                     content_textarea.send_keys(row_data[7])
@@ -423,9 +482,9 @@ class Tool4(QWidget):
                     # 儲存
                     save_button = driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[2]/div[3]/div[2]/button[1]")
                     save_button.click()
-                    time.sleep(1)
+                    time.sleep(3)
 
-                QMessageBox.critical(self, "通知", "完成。")
+                QMessageBox.information(self, "通知", "複製完畢，檢查完沒問題請按儲存在關閉此視窗。")
 
             except Exception as e:
                 logging.error(f"Error analyzing data or creating reports: {e}")
